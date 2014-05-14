@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Arch Linux) (format=pdftex 2014.3.24)  14 MAY 2014 03:14
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Arch Linux) (format=pdftex 2014.3.24)  14 MAY 2014 04:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -8,14 +8,14 @@ entering extended mode
 \leftcolumn=\box16
 \midcolumn=\box17
 
-Underfull \hbox (badness 10000) in paragraph at lines 108--114
+Underfull \hbox (badness 10000) in paragraph at lines 113--119
 
 
 \hbox(0.0+0.0)x241.84842
 .\glue(\rightskip) 0.0
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 141--145
+Underfull \hbox (badness 10000) in paragraph at lines 145--149
 
 
 \hbox(0.0+0.0)x241.84842
@@ -65,13 +65,88 @@ Underfull \vbox (badness 2818) has occurred while \output is active
 ..etc.
 .etc.
 
- [2] )</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/sh
-are/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/
-fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on 6.033review.pdf (2 pages, 64192 bytes).
+
+Underfull \hbox (badness 10000) in paragraph at lines 187--191
+
+
+\hbox(0.0+0.0)x241.84842
+.\penalty -10000
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 187--191
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 199--206
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 207--211
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+[2]
+Underfull \hbox (badness 10000) in paragraph at lines 232--234
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 253--260
+
+
+\hbox(0.0+0.0)x241.84842
+.\penalty -10000
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 253--260
+
+
+\hbox(0.0+0.0)x241.84842
+.\penalty -10000
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 253--260
+
+
+\hbox(0.0+0.0)x241.84842
+.\penalty -10000
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 253--260
+
+
+\hbox(0.0+0.0)x241.84842
+.\penalty -10000
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 253--260
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+[3] )</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/sha
+re/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on 6.033review.pdf (3 pages, 72176 bytes).
 PDF statistics:
- 23 PDF objects out of 1000 (max. 8388607)
- 15 compressed objects within 1 object stream
+ 26 PDF objects out of 1000 (max. 8388607)
+ 17 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

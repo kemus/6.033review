@@ -170,7 +170,8 @@ The snapshot operation makes a copy of a file or directory tree almost instantan
 Chunk replicas become stale if a chunkserver fails and misses mutations to the chunk while it is down.\\
 For each chunk, the master maintains a chunk version number to distinguish up-to-date and stale replicas\\
 Whenever the master grants a new lease on a chunk, it increases the chunk version number and informs the up-to-date replicas.\\
-The master removes stale replicas in its garbage collection. Before that, it considers stale replicas to not exist when it replies to client requests for chunk information.
+The master removes stale replicas in its garbage collection. \\
+Before that, it considers stale replicas to not exist when it replies to client requests for chunk information.
 \subsection{Fault Tolerance}
 We cannot trust the machines, or the disks\\
 Two strategies keep the system highly available: fast recovery and replication\\
@@ -179,6 +180,96 @@ Chunk replication: Each chunk is replicated on multiple chunkservers on differen
 Master replication: The master state is replicated for reliability. Its operation log and checkpoints are replicated on multiple machines.\\
 Each chunkserver independently verifies the integrity of its own copy by maintaining checksums
 
+\section{Concurrency Control and Recovery}
+Concurrency control ensures users see consistent states of the database even though their operations may be interleaved by the database\\
+Recovery ensures that the database is not corrupted as the result of a software, system, or media failure.
+\subsection{Transaction}
+A transaction is a unit of work that must commit or abort as a single atomic unit. \\
+If it commits, all updates it performed are made permanent and visible to other transactions. \\
+If it aborts, all of its updates are removed from the database and the database is as if the transaction had never executed.\\
+\\
+\subsection{ACID Properties}
+Atomicity: All operations of a transaction complete successfully, or none of them do.\\
+Consistency: A transaction performed on a consistent database results in a consistent database.\\
+Isolation: A transaction's behavior is not impacted by the presence of other concurrent transactions.\\
+Durability: The effects of committed transactions survive failures.
+\subsection{Inconsistent Retrieval Problem}
+If a read happens during a transaction that temporarily leaves the database in an inconsistent state.
+\subsection{Serializability}
+The most widely accepted notion of correctness for concurrent execution of transactions.
+This is the property that a (possibly interleaved) execution of a group of transactions has the same effect on the database as some serial execution of those transactions. \\\
+Conflict serializability is based on a schedule (or partial ordering) of transactions. \\
+This ordering is required to specify two types of dependencies: All operations for which an order is specified in a transactionn must appear in that order, and the ordering of all conflicting operations must be specified. \\
+Two operations conflict if they both operate on at the same item and one of them is a write.\\
+Two schedules are equivalent if they contain the same transactions and they order all conflicting operations in the same way.\\
+A schedule is serializable iff it is equivalent to some serial schedule.\\
+\subsection{Recovery}
+Three types of failures must recover:\\
+Transaction Failure: A transaction that cannot commit must rollback all of the update it made\\
+System Failure: If the volatile memory contents are lost, all updates that have committed must be in the database, and all other updates must be removed from the database.\\
+Media Failure: If data is lost on the non-volatile storage, then the database must be restored from an archival version and brought up to date using operation logs.\\
+\subsection{Logging}
+A log is a sequential file that stores records of transactions and the state of the system.\\
+When a log record is created, it is assigned a Log Sequence Number. \\
+When an update is made to a data item in the buffer, a log record is made for that update.\\
+Checkpoints are taken periodically during normal operation to make recovery faster.
+\subsection{Physical Logging}
+Indicates location of modified data in the database. \\
+If UNDO is allowed, then the value of the item prior to the update (Before image) is recorded.\\
+If REDO is allowed, then the value of the item after the update (After image) is recorded. \\
+Recovery actions are idempotent, they have the same effect no matter how many times they are applied.
+\subsection{Logical Logging}
+Records high-level information about operations that are performed.\\
+REDO and UNDO must determine the set of actions required to perform the high-level operation.\\
+Advantages: Minimizes amount of data written to the log \\
+Disadvantage: Recovery based on logical logging is difficult to implement: Actions in a logged operation are not performed atomically.
+\subsection{Physiological Logging}
+Records are constrained to a single page, but are high-level on operations on that page.
+\subsection{Write Ahead Logging}
+All log records pertaining to an updated page are written to non-volatile storage before the page is allowed to be written to non-volatile storage\\
+A transaction is not commited until all of its log records are written to stable storage.
+\subsection{Deadlocks}
+Deadlock avoidance: Imposes an order in which locks can be obtained, or aborts transactions that are blocked\\
+Deadlock detection: Uses timeouts, or explicit checking.\\
+\subsection{Two phase locking}
+Two types of locks (Shared, and Exclusive)\\
+A transaction is well-formed if it always holds an S or X lock on an item before reading it, and always holds an X lock before writing it.\\
+Two phase locking forces all transactions to be well-formed and follow the rule: once a transaction has released a lock, it cannot obtain any additional locks.\\
+Two phase locking is sufficient but not necessary to implement serializability.
+\subsection{Phantom problem}
+One transaction reads twice, another transaction adds a tuple that satisfies the query in between the reads. \\
+The two read transactions will differ, which could not occur in a serial schedule
+\subsection{Isolation levels}
+Trades consistency for concurrency in a controlled manner.\\
+Read uncommitted (Degree 0): No read locks obtained. \\
+Risk is seeing updates that will be rolled back, or seeing incomplete transactions.\\
+Read committed (Degree 1): Holds read locks on individual items for short duration. \\
+Risk is seeing non-repeatable reads. Two reads could see two different values. \\
+Repeatable read (Degree 2): Holds read locks on individual items for long duration. \\
+Risk is the phantom problem.\\
+Serializable (Degree 3): Holds read locks on predicates for long durations.\\
+Solves the phantom problem.
+\subsection{Hierarchical locking}
+Concurrent transactions can obtain locks at different granularities\\
+A lock at a particular level locks all items underneath it.\\
+Lock escalation: If a transaction obtains many locks on one level, it could be given a lock at the level above.\\
+\\
+\\
+\\
+\\
+\subsection{ARIES}
+An implementation of recovery. \\
+Uses WAL, with STEAL/NOFORCE buffer management policy:\\
+Pages on stable storage can be overwritten and data pages do not need to be forced to disk to commit a transaction. \\
+Its REDO repeats history: It redoes updates for transactions that will eventually be undone. This allows it to employ physiological logging.\\
+It uses page oriented REDO and logical UNDO.\\
+First pass processes the log forward from the most recent checkpoint, determines dirty pages and active transactions. \\
+Second pass repeats history by processing the log forward.\\
+Third pass proceeds backwards from the end, removing the effects of all uncommited transactions.\\
+Uses fuzzy checkpoints that are extremely inexpensive.
+\section{Log Structured File System}
+Writes all modifications to disk in a log-like structure, speeding up file writing and error recovery.\\
+Log is divided into segments, and a segment cleaner to compress live information from heavily fragmented sections.
 % Footer
 \vfill \smallskip
 % EOF
