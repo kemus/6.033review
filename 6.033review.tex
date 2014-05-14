@@ -267,9 +267,48 @@ First pass processes the log forward from the most recent checkpoint, determines
 Second pass repeats history by processing the log forward.\\
 Third pass proceeds backwards from the end, removing the effects of all uncommited transactions.\\
 Uses fuzzy checkpoints that are extremely inexpensive.
+
+
 \section{Log Structured File System}
 Writes all modifications to disk in a log-like structure, speeding up file writing and error recovery.\\
-Log is divided into segments, and a segment cleaner to compress live information from heavily fragmented sections.
+Log is divided into segments, and a segment cleaner to compress live information from heavily fragmented sections.\\
+An implementation, Sprite LFS, outperforms current unix file systems by an order of magnitude for small writes.\\
+This system eliminates all seeks while writing.
+\subsection{Problems with existing file systems}
+Current file systems spread information around the disk in a way that causes many small accesses \\
+Furthermore, the inode for a file is separate from its contents, as is the directory entry containing its name. \\
+When writing small files, less than 5\% of the disk's bandwidth is used for new data, the rest of the time is seeking.\\
+The second problem is that they tend to write synchronously. The application must wait for the write to complete rather than continuing while the write happens in the background.
+\\
+\\
+\subsection{Log structured file systems}
+Fundamental idea: improve write performance \\
+buffering a sequence of file system changes in the file cache and then writing all changes to disk sequentially in a single write operation. \\
+For workloads that contain many small files, a log structured file system converts the many small synchronous random writes of a traditional file system into large asynchronous sequential transfers that can use 100\% of a disk's bandwidth.
+Two key issues: How to retrieve information from the log, how to manage free space on disk so that large extents of free space are always available for writing new data.
+\subsection{File location and reading}
+Outputs index structures in the log to permit random access retrievals. For each file there is an inode. Unlike unix FFS, inodes are not in a fixed position in the disk, instead, there is an inode map, which maintains the current location of each inode. The inode map is small enough to be cached, so it rarely requires disk accesses.
+\subsection{Segments}
+The goal is to maintain large free extents for writing new data. \\
+When the log reaches the end of the disk, two things can be done: Threading (writing the log to unused portions of the disk) or copying (moving live data out of the log and writing a compressed version of it at the head of the log. \\
+Sprite LFS uses a combination of both. The disk is divided into large areas called segments. Each segment is written sequentially, and all live data must be copied out of the segment before it can be rewritten, but the log is threaded on a segment basis.
+\subsection{Segment cleaning}
+Copying live data out of a segment is called segment cleaning. Read a number of segments into memory, identify the live data, and write the live data back ot a smaller number of clean segments. After this operation is complete, the segments read are now clean. \\
+A segment summary block identifies each piece of information written in the segment, so that the inodes can be updated when the segment is cleaned.\\
+Sprite LFS cleans segments when the number of clean segments drops below a certain threshold, and it cleans until the number of clean segments rises above another threshold value.\\
+Segments are divided into two types: hot and cold. Hot segments were written to very recently, and their free space is less valuable (since they will be written to again), and cold segments have old data, and their free space is more valuable. \\
+To calculate hot and cold segments, there is a segment usage table that contains the number of live bytes in the segment and the most recent modified time of any block in the segment. \\
+Hot segments are cleaned more regularly than cold segments.
+\subsection{Crash recovery}
+When a system crash occurs, the last few operations may have left it in an inconsistent state.\\
+In traditional unix file systems, the system must scan all of the metadata structures on disk to restore consistency. The cost of these scans is very high.\\
+In LFS, the locations of the last operations are easy to determine: they're at the end of the log.\\
+Sprite LFS uses two methods to recover: checkpoints, which define consistent states of the file system, and roll-forward, which is used to recover information written since the last checkpoint.
+\subsection{Checkpoints}
+To write a checkpoint, Sprite LFS first writes out all modified information to the log, including data, inodes, inode map, and segment usage table. Second, it writes a checkpoint region to a special fixed position ont he disk. \\
+The checkpoint region contains the addresses of all the blocks in the inode map and segment usage table, plus the current time and last segment written.
+\subsection{Roll-forward}
+Sprite LFS reads through the log entries that were written after the last checkpoint. A directory operation log entry is created for each directory operation and this is used to keep consistency between the directory entries and inodes.
 % Footer
 \vfill \smallskip
 % EOF
