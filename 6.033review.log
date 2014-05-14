@@ -1,0 +1,77 @@
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Arch Linux) (format=pdftex 2014.3.24)  14 MAY 2014 03:14
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**6.033review.tex
+(./6.033review.tex
+\fullhsize=\dimen16
+\leftcolumn=\box16
+\midcolumn=\box17
+
+Underfull \hbox (badness 10000) in paragraph at lines 108--114
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 141--145
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+
+Underfull \vbox (badness 2818) has occurred while \output is active
+\vbox(540.60236+0.0)x241.84842, glue set 3.04428
+.\glue(\topskip) 3.16669
+.\hbox(6.83331+0.0)x241.84842, glue set 210.4667fil
+..\hbox(0.0+0.0)x0.0
+..\tenit M
+..\tenit a
+..\tenit s
+..\tenit t
+..etc.
+.\glue(\parskip) 0.0 plus 1.0
+.\glue(\baselineskip) 5.05556
+.\hbox(6.94444+1.94444)x241.84842, glue set 0.1232
+..\hbox(0.0+0.0)x0.0
+..\tenrm C
+..\tenrm l
+..\tenrm i
+..\tenrm e
+..etc.
+.etc.
+
+ [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+Underfull \vbox (badness 2818) has occurred while \output is active
+\vbox(540.60236+1.94444)x241.84842, glue set 3.04428
+.\glue(\topskip) 3.05556
+.\hbox(6.94444+1.94444)x241.84842, glue set 160.06007fil
+..\hbox(0.0+0.0)x0.0
+..\tenit C
+..\tenit o
+..\tenit n
+..\tenit s
+..etc.
+.\glue(\parskip) 0.0 plus 1.0
+.\glue(\baselineskip) 3.11111
+.\hbox(6.94444+1.94444)x241.84842, glue set 78.66757fil
+..\hbox(0.0+0.0)x0.0
+..\tenrm G
+..\tenrm F
+..\tenrm S
+..\glue 3.33333 plus 1.66498 minus 1.11221
+..etc.
+.etc.
+
+ [2] )</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/sh
+are/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on 6.033review.pdf (2 pages, 64192 bytes).
+PDF statistics:
+ 23 PDF objects out of 1000 (max. 8388607)
+ 15 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+
