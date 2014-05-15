@@ -189,51 +189,51 @@ If it commits, all updates it performed are made permanent and visible to other 
 If it aborts, all of its updates are removed from the database and the database is as if the transaction had never executed.\\
 \\
 \subsection{ACID Properties}
-Atomicity: All operations of a transaction complete successfully, or none of them do.\\
-Consistency: A transaction performed on a consistent database results in a consistent database.\\
-Isolation: A transaction's behavior is not impacted by the presence of other concurrent transactions.\\
-Durability: The effects of committed transactions survive failures.
-\subsection{Inconsistent Retrieval Problem}
-If a read happens during a transaction that temporarily leaves the database in an inconsistent state.
-\subsection{Serializability}
-The most widely accepted notion of correctness for concurrent execution of transactions.
-This is the property that a (possibly interleaved) execution of a group of transactions has the same effect on the database as some serial execution of those transactions. \\\
-Conflict serializability is based on a schedule (or partial ordering) of transactions. \\
-This ordering is required to specify two types of dependencies: All operations for which an order is specified in a transactionn must appear in that order, and the ordering of all conflicting operations must be specified. \\
-Two operations conflict if they both operate on at the same item and one of them is a write.\\
-Two schedules are equivalent if they contain the same transactions and they order all conflicting operations in the same way.\\
-A schedule is serializable iff it is equivalent to some serial schedule.\\
-\subsection{Recovery}
-Three types of failures must recover:\\
-Transaction Failure: A transaction that cannot commit must rollback all of the update it made\\
-System Failure: If the volatile memory contents are lost, all updates that have committed must be in the database, and all other updates must be removed from the database.\\
-Media Failure: If data is lost on the non-volatile storage, then the database must be restored from an archival version and brought up to date using operation logs.\\
-\subsection{Logging}
-A log is a sequential file that stores records of transactions and the state of the system.\\
-When a log record is created, it is assigned a Log Sequence Number. \\
-When an update is made to a data item in the buffer, a log record is made for that update.\\
-Checkpoints are taken periodically during normal operation to make recovery faster.
-\subsection{Physical Logging}
-Indicates location of modified data in the database. \\
-If UNDO is allowed, then the value of the item prior to the update (Before image) is recorded.\\
-If REDO is allowed, then the value of the item after the update (After image) is recorded. \\
-Recovery actions are idempotent, they have the same effect no matter how many times they are applied.
-\subsection{Logical Logging}
-Records high-level information about operations that are performed.\\
-REDO and UNDO must determine the set of actions required to perform the high-level operation.\\
-Advantages: Minimizes amount of data written to the log \\
-Disadvantage: Recovery based on logical logging is difficult to implement: Actions in a logged operation are not performed atomically.
-\subsection{Physiological Logging}
-Records are constrained to a single page, but are high-level on operations on that page.
-\subsection{Write Ahead Logging}
-All log records pertaining to an updated page are written to non-volatile storage before the page is allowed to be written to non-volatile storage\\
-A transaction is not commited until all of its log records are written to stable storage.
-\subsection{Deadlocks}
-Deadlock avoidance: Imposes an order in which locks can be obtained, or aborts transactions that are blocked\\
-Deadlock detection: Uses timeouts, or explicit checking.\\
-\subsection{Two phase locking}
-Two types of locks (Shared, and Exclusive)\\
-A transaction is well-formed if it always holds an S or X lock on an item before reading it, and always holds an X lock before writing it.\\
+Parity calculation is much simpler: new parity = (old data xor new data) xor old parity. The check disk in a group must be read and written with every small write in that group, making it the bottleneck.
+\subsection{RAID-5: No single check disk}
+Distributes data and checks across all the disks - including the check disks. Because of this, RAID 5 can support multiple individual writes per group.\\
+Best of both worlds: small read/writes perform close to the speed of a level 1 RAID and it keeps the large transfer performance and high storage capacity of RAID 3/4.\\
+RAID-5 is good for supercomputers or transaction processing.
+
+% GFS
+
+\section{The Google File System}
+GFS is a scalable distributed file system for large distributed data-intensive application. It has fault tolerance and delivers high aggregate performance to a large number of clients.
+\subsection{Assumptions}
+Component failures are common\\
+Modest number of very large file\\
+Reads are large streams or small \& random\\
+Large sequential writes that append data\\
+Multiple clients concurrently append to the same file \\
+High bandwidth is more important than low latency\\
+\subsection{New Operations}
+Snapshot creates a copy of a file or directory at low cost\\
+Record append allows multiple clients to append to the same file and guarantees the atomicity of each append.
+\subsection{Architecture}
+A GFS cluster has one master and many chunkservers, and is accessed by many clients\\
+Files are divided into 64MB chunks\\
+Each chunk is replicated on multiple chunkservers\\
+The master maintains all system metadata, chunk lease management, garbage collection, and chunk migration. \\
+File data is not cached by the client or the chunkserver\\
+Metadata is cached by the client\\
+GFS does not have a per-directory data structure that lists all the files in that directory.\\
+It does not support aliases for the same file (symbolic links)\\
+GFS represents its namespace as a lookup table mapping full pathnames to metadata, stored in memory using prefix compression.
+\subsection{Master}
+Clients do not read and write files through the master, they ask the master which chunkservers it should contact, and interact with this chunkserver for subsequent operations\\
+The master executes all namespace operations, manages chunk replicas, makes placement decisions, creates new chunks and replicas, coordinates system-wide activities to keep chunks fully replicated, to balance load, and to reclaim unused storage.
+\subsection{Metadata}
+Master stores 3 types of metadata: File/chunk namespaces, mapping from files to chunks, and locations of each chunk's replicas.\\
+All metadata is kept in the master's memory, so master operations are fast.\\
+Master does not keep a record of which chunkservers have a replica of a given chunk. It polls chunkservers for that information at startup. A chunkserver has the final word over what chunks it does or does not have on its own disks.\\
+The operation log contains a historical record of critical metadata changes. \\
+The operation log is the only persistent record of metadata and serves as a logical time line that defines the order of concurrent operations. \\
+Files, chunks, and their versions are all uniquely identified by the logical times at which they were created. \\
+The master recovers its state by replaying the operation log. \\
+The master's state is checkpointed whenever the log grows too large, so it can recover by loading the latest checkpoint and replaying the log records after that.
+\subsection{Leases}
+The lease mechanism is designed to minimize management overhead at the master.
+Each mutation happens at all of the chunk's replicas. \\
 Two phase locking forces all transactions to be well-formed and follow the rule: once a transaction has released a lock, it cannot obtain any additional locks.\\
 Two phase locking is sufficient but not necessary to implement serializability.
 \subsection{Phantom problem}
@@ -309,6 +309,30 @@ To write a checkpoint, Sprite LFS first writes out all modified information to t
 The checkpoint region contains the addresses of all the blocks in the inode map and segment usage table, plus the current time and last segment written.
 \subsection{Roll-forward}
 Sprite LFS reads through the log entries that were written after the last checkpoint. A directory operation log entry is created for each directory operation and this is used to keep consistency between the directory entries and inodes.
+
+\section{PNUTS}
+PNUTS is a parallel and distributed database system used by Yahoo's web applications.\\
+It provides data storage as hashed or ordered tables, with low latency for many concurrent requests, and per-record consistency guarantees.
+\subsection{Relaxed Consistency}
+No need for serializable transactions, or even transactions at all. Most users only modify one record at a time. One possible idea was eventual consistency, but that is too weak: if a user wants to remove his mother from the list of people who can access his photos before adding a photo, these updates must happen in that order.
+\subsection{Data and Query Model}
+Data is organized into tables of records with attributes. Flexible schemas: new attributes can be added, and records are not required to have values for all attributes.\\
+There are two main types of access: Point access involves a single record, range access involves a set of records. PNUTS allows hashed or ordered tables to support both types of requests.
+\subsection{Consistency Model}
+Between the extremes of serializability and eventual consistency. Per record timeline consistency: all replicas of a record apply all updates to the record in the same order. To implement, a master replica receives all updates to that record. There are several API calls with varying levels of consistency guarantees:\\
+Read-any: returns a possibly stale version of the record \\
+Read-critical(required-version): returns a version of the record that is at most as old as required-version\\
+Read-latest: Returns the latest copy of the record \\
+Write: Performs a normal write \\
+Test-and-set-write(required-version): Performs a write to a record if and only if the version is the same as required-version. This is used for transactions that read a record and then modify it.
+\subsection{Architecture}
+Tables are horizontally split into groups of records called tablets. \\
+Storage unit: Stores tablets, responds to get(), scan() and set()\\
+Router: determines which tablet has a record, and which storage unit has that tablet\\
+Tablet controller: Polled by the routers to obtain updated mappings. Determines when to move a tablet between storage units\\
+Message Broker: A publish/subscribe system, replaces redo log, used for replication. Provides partial ordering of published messages.\\
+Scatter-Gather engine: Component of the router, responsible for multi-record requests.
+
 % Footer
 \vfill \smallskip
 % EOF
@@ -319,3 +343,6 @@ Sprite LFS reads through the log entries that were written after the last checkp
 \bye
 
 % EOF
+
+% VIM Quick Reference Card
+% Copyright (c) 2009 Michael Goerz.
