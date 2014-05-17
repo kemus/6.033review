@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Arch Linux) (format=pdftex 2014.3.24)  15 MAY 2014 15:03
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Arch Linux) (format=pdftex 2014.3.24)  16 MAY 2014 20:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -141,13 +141,32 @@ Underfull \hbox (badness 10000) in paragraph at lines 278--284
 \hbox(0.0+0.0)x241.84842
 .\glue(\rightskip) 0.0
 
-[3] [4] [5] )</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><
-/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on 6.033review.pdf (5 pages, 79383 bytes).
+[3] [4]
+Underfull \hbox (badness 10000) in paragraph at lines 351--358
+
+
+\hbox(0.0+0.0)x241.84842
+.\glue(\rightskip) 0.0
+
+
+Overfull \hbox (4.95761pt too wide) in paragraph at lines 373--376
+\tenrm Web At-tacker: Ma-li-cious in-di-vid-ual owns a do-main name,|
+
+\hbox(6.94444+1.94444)x241.84842, glue set - 1.0
+.\tenrm W
+.\kern-0.83334
+.\tenrm e
+.\tenrm b
+.\glue 3.33333 plus 1.66666 minus 1.11111
+.etc.
+
+[5] [6] )</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr
+/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on 6.033review.pdf (6 pages, 89691 bytes).
 PDF statistics:
- 32 PDF objects out of 1000 (max. 8388607)
- 21 compressed objects within 1 object stream
+ 35 PDF objects out of 1000 (max. 8388607)
+ 23 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

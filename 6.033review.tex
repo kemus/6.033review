@@ -333,7 +333,82 @@ Tablet controller: Polled by the routers to obtain updated mappings. Determines 
 Message Broker: A publish/subscribe system, replaces redo log, used for replication. Provides partial ordering of published messages.\\
 Scatter-Gather engine: Component of the router, responsible for multi-record requests.
 
+\section{Spanner}
+Google's database system. Distributes data at global scale, supports externally consistent distributed transactions.\\
+It shards its data across sets of Paxos state machines. Applications can fine-tune parameters, and it provides externally consistent reads and writes, and globally consistent reads across the database at a timestamp.\\
+Timestamps are used to reflect serialization order. This system is linearizable.
+\subsection{Implementation}
+A spanner deployment is called a universe. It has a placement driver which moves data across zones. It is organized as a set of zones, where each zone is analogous to a bigtable deployment. \\
+A zone has one zonemaster and many spanservers. The zonemaster assigns data to spanservers, the spanservers serve data to clients. \\
+A zone also has location proxies, used to find which spanserver is assigned to serve a user's data.
+\subsection{Spanserver}
+Each spanserver is responsible for many tablets. \\
+A tablet's state is stored in a set of B-tree like files and a write-ahead log. \\
+Each spanserver implements a Paxos state machene on top of each tablet. Each state machine stores its metadata and log in the corresponding tablet.\\
+These Paxos machines are used to implement a consistently replicated bag of mappings. The set of replicas is called a Paxos group.\\
+At every replica that is a leader, each spanserver implements a lock table for concurrency control, using two phase locking. Each leader also implements a transaction manager to support distributed transactions.
+\subsection{TrueTime}
+TT.now() - returns an interval from earliest to latest possible timestamp\\
+TT.after(t) - returns true if timestamp t has definitely passed\\
+TT.before(t) - returns true if timestamp t has definitely not arrived\\
+Truetime uses both GPS and atomic clocks\\
+A set of timemaster machines per datacenter\\
+a timeslave daemon per machine. \\
+The time uncertainty is under 7ms.\\
+
+\section{Cross Site Request Forgery}
+Cross Site Request Forgery is a widely exploited web vulnerability. A login CSRF logs the victim into an honest website as the attacker. The severity of CSRF varies, but can be as severe as XSS.
+\subsection{Common Defenses (ineffective)}
+Including a secret token with each request, validating that token with the user's session - bad because they overlook login requests because login requests lack a session to bind their token to.\\
+Validating HTTP referer header, but if a request lack a referer header, the site must block the request (exclusing a significant proportion of legitimate users) or process the requests (making the defense ineffective).\\
+XMLHttpRequest headers - require all state modifying requests to be made using XMLHttprequests.
+\subsection{Origin header}
+Proposal: Create an origin header, similar to HTTP referer, but addressing the privacy concerns.\\
+Includes only information required to identify who initiated the request.\\
+Sent only on POST requests.\\
+Proposal: Make all state changing requests be POST requests, if Origin header is present, reject any requests whose origin header contains an undesired value.
+\subsection{What is CSRF?}
+Allows a malicious site to send requests as a user. Allows a userto access sites behind a firewall, read browser state, or write browser state.
+\subsection{Types of attacks}
+Forum poster: A malicious individual can create false images or links that force HTTP get requests, which are not supposed to modify the state based on a user's request, but frequently do.\\
+Web Attacker: Malicious individual owns a domain name, has a valid HTTPS certificate for that server, and operates that server. He can instruct the user's browser to mount a CSRF attack by instructing the browser to issue cross-site requests using GET or POST methods.\\
+Network Attacker: Controls the user's network connection.
+\subsection{Out of scope attacks}
+These attacks are not considered CSRF attacks: XSS, Malware, DNS rebinding, Certificate errors, phishing, user tracking
+\subsection{Login CSRF}
+Logs the user into a malicious individual's account. The attacker forges a login request to an honest site using the attacker's username and password. \\
+Possible attacks: Search history: Allows a malicious individual to store a user's search history.\\
+Paypal: Lets the user log into a malicious individual's account and add his credit card to that account\\
+iGoogle: Attaches to the user's iGoogle gadgets, allows the user to run the malicious individual's scripts, which create a fake login page, steals the user's autocompleted password, or reads the user's cookies to obtain the user's credentials.
+
+\section{Trusting Trust}
+You can make a C compiler with malicious code that inserts the malicious code into the compiled version of a C compiler (using a quine). With this, if you compile a program, it can insert bugs and no amount of reading the source will help. You must trust the people who wrote the software.
+
+\section{Beyond Stack Smashing}
+Traditional approach: Stack smashing - modifying the return address saved on the stack to point to malicious code. \\
+Arc Injection (return to libc) transfers control to code that already exists in memory space. Used when stack is not executable.\\
+Pointer Subterfuge changes control flow by attacking function pointers or modify arbitrary memory locations by subvering data pointers. \\
+Heap Smashing allows exploiting buffer overflows in dynamically allocated memory, rather than on the stack.
+\subsection{Stack Smashing Enhancements}
+Trampolining: Allows you to apply stack smashing without knowing exactly where your malicious code is. Find a sequence of instructions at a predictable location that transfers control in a reliable way, then go there instead.
+Separating the payload and the buffer overrun operation: Useful if your buffer is too small to hold your payload.
+\section{Effectiveness of Phishing Warnings}
+Phishing relies on confusing people, so it is hard to automatically detect with complete accuracy, because of this, anti-phishing tools use warnings rather than blocking sites.\\
+Two types: Active and Passive, where active forces user to click past the warning.\\
+Look and feel is the most important aspect to a user's trust, which means a well-designed malicious website can be really effective. Savvy users are just as susceptible to phishing as novice users.
+\subsection{SiteKey}
+Shows a userselected image after the user enters his username. 92\% of users still logged in when the correct image was not present.
+\subsection{Extended Validation}
+Certificates saying the company is legally recognized. IE colors the URL bar green. Does not work, and makes users less suspicious of fraudulent websites that don't yield warnings.
+\subsection{Metrics}
+Hazard Matching - accurately using warning messages to convey risks\\
+Arousal Strength - perceived urgency of the warning\\
+Habituation - When a user sees the same warning many times, he ignores it. Only way to recapture attention is increasing arousal strength of warning.
+\subsection{Conclusion}
+Most people clicked the urls, and most people believed they came from eBay and paypal. 79\% of people were saved by active warnings, whereas 13\% of people were saved by passive warnings. Passive warnings are useless. Active warnings from IE are often ignored. Phishing warnings need to interrupt the user, provide clear choices, fail safely, and prevent habituation.
 % Footer
+
+
 \vfill \smallskip
 % EOF
 % Ending
