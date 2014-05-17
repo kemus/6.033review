@@ -371,7 +371,7 @@ Proposal: Make all state changing requests be POST requests, if Origin header is
 Allows a malicious site to send requests as a user. Allows a userto access sites behind a firewall, read browser state, or write browser state.
 \subsection{Types of attacks}
 Forum poster: A malicious individual can create false images or links that force HTTP get requests, which are not supposed to modify the state based on a user's request, but frequently do.\\
-Web Attacker: Malicious individual owns a domain name, has a valid HTTPS certificate for that server, and operates that server. He can instruct the user's browser to mount a CSRF attack by instructing the browser to issue cross-site requests using GET or POST methods.\\
+Web Attacker: Malicious individual owns domain name, has a valid HTTPS certificate for that server, and operates that server. He can instruct the user's browser to mount a CSRF attack by instructing the browser to issue cross-site requests using GET or POST methods.\\
 Network Attacker: Controls the user's network connection.
 \subsection{Out of scope attacks}
 These attacks are not considered CSRF attacks: XSS, Malware, DNS rebinding, Certificate errors, phishing, user tracking
@@ -406,6 +406,29 @@ Arousal Strength - perceived urgency of the warning\\
 Habituation - When a user sees the same warning many times, he ignores it. Only way to recapture attention is increasing arousal strength of warning.
 \subsection{Conclusion}
 Most people clicked the urls, and most people believed they came from eBay and paypal. 79\% of people were saved by active warnings, whereas 13\% of people were saved by passive warnings. Passive warnings are useless. Active warnings from IE are often ignored. Phishing warnings need to interrupt the user, provide clear choices, fail safely, and prevent habituation.
+
+\section{Transport Layer Security}
+TLS is a widely used protocol to establish a secure channel. It is a version of SSL.
+\subsection{TLS Handshake}
+Client sends a ClientHello message with the version that the client is running, a random sequence number, and a prioritized set of ciphers the client is willing to use.\\
+Server responds with a ServerHello message announcing the version of the protocol that will be used, a random number, a session identifier, and a cipher selected from the set.\\
+To authenticate the server, it sends a ServerCertificate message with a chain of certificates.\\
+Server then sends a ServerHelloDone message to indicate it is done with the first part of the handshake.\\
+Client verifies the certificates, generates a \\
+pre-master-secret, which it encrypts with the public key of the server.\\
+The pre-master-secret is used by the server, along with both random numbers to generate the master-secret.\\
+Client sends a ChangeCipherSpec message, specifying the cipher that it will use.\\
+Client sends a Finished message, verifying the protocol sequence so far.\\
+Server sends a ChangeCipherSpec message, specifying the cipher that it will use.\\
+Server sends a Finished message, at which point there is a secure channel (encrypted and authenticated) over which they can communicate.
+\subsection{Authenticating Services}
+Client must convince itself that a service's public key is authentic. \\
+To do this, the service buys a certificate from one or more CAs, each authority runs a check to validate the service, and then provides a certificate. \\
+Client has a list of public keys of CAs it trusts, and uses them to validate one of the certificates.
+\subsection{Authenticating Users}
+Users can be authenticated by certificates, but this is uncommon due to inconvenience.\\
+Using IP address is bad because it can be spoofed.\\
+Passphrase authentication is better, but to avoid having the user type in passphrase on every request, the server uses cookies.
 % Footer
 
 
