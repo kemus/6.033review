@@ -429,6 +429,116 @@ Client has a list of public keys of CAs it trusts, and uses them to validate one
 Users can be authenticated by certificates, but this is uncommon due to inconvenience.\\
 Using IP address is bad because it can be spoofed.\\
 Passphrase authentication is better, but to avoid having the user type in passphrase on every request, the server uses cookies.
+\section{L14: Reliability}
+Goals: Keep running despite failures, include malicious failures.\\
+Threats: Software faults, hardware failures, design issues, operation failures, environmental issues\\
+Build reliable systems from unreliable parts. Basic way: redundancy.\\
+Mean Time To Failure = MTTF\\
+Mean Time To Repair = MTTR\\
+Availability $= MTTF/(MTTF+MTTR)$ \\
+MTBF $= MTTF+MTTR$\\
+\section{L15: Atomicity}
+Atomicity is making a multi-step action look like a single action. For example, transferring money at a bank.\\
+Related problem: Concurrency. If we have another function that sums the money in the bank, if it runs during a transfer it could return the wrong total.\\
+Never modify the only copy if you want atomicity. Use a shadow copy, and rename it. Commit point is modifying the directory entry. If we crash, we might have too many refcounts on an inode, in which case we can remove the directory entry for the newfile.
+\section{L16: Logging}
+Key idea: keep a log of updates a transaction made while it ran and whether it committed or aborted.\\
+Assign each all-or-nothing action a unique transaction id.\\
+Two kinds of records: update and commit/abort records.\\
+Writing a commit record is the commit point for an action, but writing a log record had better be atomic. \\
+Two approaches: Make each record fit within one sector, or put checksum on each record.\\
+To optimize for speed, keep both a log and cell storage. Cell storage provides fast reads but is not atomic. Logging an update puts it into the log, installing an update puts it to cell storage.\\
+To recover cell storage, scan log, determine loser actions and undo them. Scan backwards to undo newest to oldest.\\
+Golden rule: Log update before installing it (WAL)\\
+Further optimizations: Cache writes, truncate log by writing checkpoints.
+\section{L17: Isolation}
+Isolate running transactions from each other.\\
+For each read object in T1, conflicts with all writes of that object in T2. For each write object in T1, conflicts with all reads or writes of that object in T2. A schedule is serializable if all conflicts run T1's action first or all conflict run T2's action first.\\
+Plan: obtain locks for each variable before accessing it. \\
+Wait until commit to release lock.\\
+Problem: Deadlocks, to solve, kill one transaction.\\
+Optimization 1: Read/Write locks separately, multiple readers are OK, conflicts are only when there is a writer.\\
+Optimization 2: two-phase locking. phase 1: acquire read and write locks until transaction reaches lock point, phase 2: release locks after lock point and done with object (Idea: releasing locks early).\\
+Strict 2PL: Hold write locks until end of transactions\\
+Optimization 3: Relaxed consistency: Don't always need serializability.
+\section{L18: Multisite atomicity}
+Don't want one site to commit unless the other has also committed. One might commit and the other might crash and decide to abort.\\
+Solution: 2 phase commit. Get nodes to agree that they are ready to commit, even if they crash, and then make them commit.\\
+Coordinator sends tasks to workers, workers log transaction begin and updates as normal\\
+Once all tasks are done, coordinator needs to get workers to enter prepared state.\\
+Workers will definitely commit if in prepared state and coordinator tells them to commit.\\
+If messages are lost, use timeouts to resend messages.\\
+2PC provides a way for a set of distributed nodes to agree (commit vs abort), but it only guarantees they will eventually learn about the outcome, not agree at the same instant.\\
+2 generals paradox: Can never ensure that agreements happen in bounded time, but they will eventually happen with high probability.
+\section{L19: Replicated state machines}
+Problem: Failures of nodes can make system unavailable.\\
+Might want a long running service to continue working in the presence of a node failure.\\
+Ideal goal for replicated system: single-copy consistency.\\
+Operations appear to execute as if there's only a single copy of the data. Internally, there may be disagreements or failures, which have to be masked.\\
+DNS and PNUTS settle for weaker semantics\\
+Different clients can observe different states of the system.\\
+Problem: replicas can become inconsistent if clients' requests arrive in different orders to different servers.\\
+Solution: Replicated state machines\\
+Start with the same initial state on each server, provide each replica with same input operations in same order, ensure all operations are deterministic.\\
+Assumption: Independent failure of replicas\\
+Client - Primary DB - Backup DB\\
+Primary ensures all updates sent to backup before acknowledging client.\\
+Primary chooses an ordering for all operations and decides non-deterministic values for random(), time(), etc.\\
+Problem: What if primary fails?\\
+Client could know about primary and backup and decide which to use.\\
+Problem: multiple clients think different replicas are primary.\\
+Solution: Have a human decide when to switch from primary to backup\\
+Automated Solution: Have a view server maintain current primary\\
+Clients contact view server to agree on primary.\\
+Primary not allowed to respond until it gets Ack from backup.\\
+Non-backup must reject forwarded requests.\\
+Primary in view i must have been primary or backup in view i-1\\
+Non-primary must reject direct client requests
+\section{L20: RSM with PAXOS}
+Need a way to pick new view server if old one fails. But what if old one is still alive?\\
+View server is actually n nodes, where n>=3. They run PAXOS (distributed consensus) to decide on some value (id of next view server).\\
+Majority rule: to choose a new value, majority must agree on the value. Any 2 majority sets overlap by one server, so any majority will contain a node that heard about the previous majority.\\
+Use PAXOS to choose the view server. View server nodes use PAXOS to agree on the set of all replicas and coordinator, the last operation executed by the current (dead) coordinator.\\
+\section{L21: security intro}
+Attacks are cheap, fast, and scalable.\\
+Security is hard because it is a negative goal. Must consider all possible ways in which security might be broken.\\
+Cannot guarantee security.\\
+\subsection{Policy: goals}
+Information security goals: \\
+Privacy: limit who can read data\\
+Integrity: limit who can write data\\
+Liveness goals:\\
+Availability: ensure service keeps operating\\
+\subsection{Threat model: assumptions}
+Adversary controls some computers, networks (but not all) \\
+Adversary controls some software on computers he doesn't fully control\\
+Adversary knows some information, passwords, or keys (but not all)\\
+Adversary knows about bugs in your software?\\
+Physical attacks?\\
+Social engineering?\\
+Resources are hard to estimate.\\
+Many systems compromised due to incomplete threat model\\
+Overly ambitious threat models are not good either:\\
+Not all threats are equally important\\
+Stronger requirements lead to complexity, which leads to subtle security problems
+\subsection{Guard model}
+We are worried about security at the server\\
+Security goal relates to some resource in the server\\
+Server checks all accesses to resource (consults a guard to make decision)\\
+Complete mediation: only way to access involves guard\\
+Must enforce client-server modularity\\
+Must ensure server invokes guard in right places\\
+Authentication: request - principal\\
+E.G: username verified by password\\
+Authorization: Request,principal,resource - allow?\\
+E.G: consult access control list for resource
+\subsection{What goes wrong?}
+Software bug / Complete mediation\\
+Policy vs Mechanism (policy is that students cannot get a copy of grades.txt, mechanisms are permissions or firewall rules)\\
+Interactions between layers/components\\
+Users make mistakes (social engineering, phishing)\\
+Cost of security (users may be unwilling to pay cost of security)
+
 % Footer
 
 
